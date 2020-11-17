@@ -1,0 +1,52 @@
+#!/bin/bash
+#
+
+phoenix=/app/apache-phoenix-5.0.0-HBase-2.0-bin
+hbase=/app/hbase-2.1.1
+cat<< EOF
+此脚本是用于创建单节点Phoenix环境,请注意!!!
+执行中不能强制退出，请注意!!!
+环境准备:要在家目录下面有一个hbase-site.xml的文件
+文件内容是:
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+<property>
+  <name>hbase.regionserver.wal.codec</name>
+  <value>org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec</value>
+</property>
+</configuration>
+环境准备就绪后就可以了!!!
+EOF
+[ ! -f ~/hbase-site.xml ] && echo "请按上面的描述创建环境." && exit || echo "环境准备就绪,执行后续的操作!"
+read -p "是否继续(输入y|n) " option
+case $option in
+        y|Y)
+        trap "echo '都告诉你了不能强制退出!!!'" SIGINT
+        echo -e '\033[1;31m第一步解压hbase到/app目录下,请稍等...\033[0m'
+        tar -zxvf /opt/hbase-2.1.1-bin.tar.gz -C /app > /dev/null 2>&1
+        echo -e '\033[1;32m第二步解压Phoenix到/app目录下，请稍等...\033[0m'
+        tar -zxvf /opt/apache-phoenix-5.0.0-HBase-2.0-bin.tar.gz -C /app > /dev/null 2>&1
+        echo -e '\033[1;33m第三步复制jar包，请稍等...\033[0m'
+        cp $phoenix/phoenix-5.0.0-HBase-2.0-server.jar $hbase/lib/
+        cp $phoenix/phoenix-core-5.0.0-HBase-2.0.jar $hbase/lib/
+        echo -e '\033[1;34m第四步修改配置文件，请稍等...\033[0m'
+        cp $hbase/conf/hbase-site.xml{,.bak}
+        cp ~/hbase-site.xml $hbase/conf/hbase-site.xml
+        echo -e '\033[1;35m第五步启动Hbase和Phoenix请稍等...\033[0m'
+        $hbase/bin/start-hbase.sh > /dev/null 2>&1
+        if [ $? -eq 0 ]
+        then
+        $phoenix/bin/sqlline.py 127.0.0.1:2181
+        fi
+#       exit
+        ;;
+        n|N)
+        echo "退出"
+        exit
+        ;;
+        *)
+        echo "请不要乱输，请输入[y|Y|n|N]"
+        exit
+        ;;
+esac

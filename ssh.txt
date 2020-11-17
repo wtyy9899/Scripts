@@ -1,0 +1,9 @@
+免秘钥拷贝ssh:
+sshpass -p "911911" ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no -p 22 root@10.0.0.141
+实例:
+#!/bin/bash
+#
+for i in master05yy slave1 slave2
+do
+sshpass -p "123456" ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no -p 22 root@$i > /dev/null 2>&1
+done
